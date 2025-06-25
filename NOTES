@@ -1,0 +1,191 @@
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
+
+const initialNotes = [
+  {
+    id: 1,
+    title: "Study",
+    subject: "Empty",
+    price: 49,
+    description: "notes covering all chapters.",
+  },
+  {
+    id: 2,
+    title: "Study",
+    subject: "Empty",
+    price: 30,
+    description: "notes covering all chapters.",
+  },
+  {
+    id: 3,
+    title: "Study",
+    subject: "Empty",
+    price: 30,
+    description: "notes covering all chapters.",
+  },
+  {
+    id: 4,
+    title: "Study",
+    subject: "Empty",
+    price: 30,
+    description: "notes covering all chapters.",
+  },
+];
+
+export default function BuyNotes() {
+  const [notes, setNotes] = useState(initialNotes);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [unlockPassword, setUnlockPassword] = useState("");
+  const [formData, setFormData] = useState({
+    title: "",
+    subject: "",
+    price: "",
+    description: "",
+    file: null,
+  });
+
+  const handleBuy = (note) => {
+    const upiUrl = `upi://pay?pa=844702706@axl&pn=Buy%20Notes&am=${note.price}&cu=INR&tn=Purchase%20Note%20${encodeURIComponent(
+      note.title
+    )}`;
+    const win = window.open(upiUrl, "_blank");
+    if (!win) {
+      alert("Please allow popups for this site to complete the payment.");
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, file: e.target.files[0] });
+  };
+
+  const handleUpload = () => {
+    const newNote = {
+      id: notes.length + 1,
+      title: formData.title,
+      subject: formData.subject,
+      price: parseFloat(formData.price),
+      description: formData.description,
+      file: formData.file,
+    };
+    setNotes([...notes, newNote]);
+    setFormData({ title: "", subject: "", price: "", description: "", file: null });
+  };
+
+  const handleAdminUnlock = () => {
+    if (unlockPassword === "Feedback@01") {
+      setIsAdmin(true);
+    } else {
+      alert("Incorrect password");
+    }
+  };
+
+  return (
+    <motion.div
+      className="p-6 max-w-5xl mx-auto"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h1
+        className="text-3xl font-bold mb-6 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        Buy Notes
+      </motion.h1>
+
+      {!isAdmin && (
+        <div className="mb-6 flex items-center gap-2">
+          <Input
+            type="password"
+            placeholder="Enter admin password"
+            value={unlockPassword}
+            onChange={(e) => setUnlockPassword(e.target.value)}
+          />
+          <Button onClick={handleAdminUnlock}>Admin Unlock</Button>
+        </div>
+      )}
+
+      {isAdmin && (
+        <motion.div
+          className="mb-10 p-4 border rounded-lg shadow-sm"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h2 className="text-xl font-semibold mb-4">Upload Your Notes</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Title</Label>
+              <Input name="title" value={formData.title} onChange={handleInputChange} />
+            </div>
+            <div>
+              <Label>Subject</Label>
+              <Input name="subject" value={formData.subject} onChange={handleInputChange} />
+            </div>
+            <div>
+              <Label>Price (₹)</Label>
+              <Input name="price" value={formData.price} onChange={handleInputChange} />
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Description</Label>
+              <Input name="description" value={formData.description} onChange={handleInputChange} />
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Upload File</Label>
+              <Input type="file" onChange={handleFileChange} />
+            </div>
+            <div className="sm:col-span-2 text-right">
+              <Button onClick={handleUpload}>Upload Note</Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: {},
+          show: {
+            transition: {
+              staggerChildren: 0.1,
+            },
+          },
+        }}
+      >
+        {notes.map((note) => (
+          <motion.div
+            key={note.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="rounded-2xl shadow-md">
+              <CardContent className="p-4">
+                <h2 className="text-xl font-semibold mb-2">{note.title}</h2>
+                <p className="text-sm text-gray-600 mb-2">Subject: {note.subject}</p>
+                <p className="text-gray-700 mb-4">{note.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold">₹{note.price}</span>
+                  <Button onClick={() => handleBuy(note)}>Buy with PhonePe</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
+}
